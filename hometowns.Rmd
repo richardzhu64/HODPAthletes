@@ -1,0 +1,67 @@
+---
+title: "hometowns.Rmd"
+author: "Richard Zhu"
+date: "4/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(infer)
+library(datasets)
+library(gt)
+```
+
+```{r}
+hometowns <- read_csv("Hometowns.csv") %>%
+  mutate(split = strsplit(Hometown, ", ")) %>%
+  mutate(length = map(split, ~ length(.))) %>%
+  filter(length > 3) %>%
+  mutate(name = map_chr(split, ~ .[1] %>% toString()),
+         state = map_chr(split, ~ as.character(.[3]) %>% toString()))%>%
+  mutate(state = ifelse(state == "Los Angeles County", "California", 
+                        state))
+
+hometowns %>%
+  filter(state %in% state.name) %>%
+  group_by(state) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  head(8) %>%
+  gt() %>%
+  tab_header(
+    title = "Top Athlete Home States",
+  ) %>%
+  cols_label(
+    state = "State",
+    n = "Number of Athletes"
+    ) %>%
+  cols_align(
+    align="center"
+  ) %>%
+  fmt_passthrough(
+    columns = vars(state, n)
+  )
+hometowns %>%
+  group_by(name) %>%
+  tally() %>%
+  arrange(desc(n)) %>%
+  head(8) %>%
+  gt() %>%
+  tab_header(
+    title = "Top Athlete Hometowns",
+  ) %>%
+  cols_label(
+    name = "Hometown",
+    n = ""
+    ) %>%
+  cols_align(
+    align="center"
+  ) %>%
+  fmt_passthrough(
+    columns = vars(name, n)
+  )
+
+```
+
